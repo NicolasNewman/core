@@ -469,6 +469,7 @@ FLOWS = {
         "rdw",
         "recollect_waste",
         "refoss",
+        "remotetts",
         "renault",
         "renson",
         "reolink",

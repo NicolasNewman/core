@@ -4991,6 +4991,12 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
+    "remotetts": {
+      "name": "RemoteTTS",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "renault": {
       "name": "Renault",
       "integration_type": "hub",

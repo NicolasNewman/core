@@ -35,9 +35,9 @@ type RemoteTTSConfigEntry = ConfigEntry[RemoteTTSData]
 async def async_setup_entry(hass: HomeAssistant, entry: RemoteTTSConfigEntry) -> bool:
     """Set up remotetts from a config entry."""
 
-    name = entry.options[CONF_NAME]
-    language = entry.options[CONF_LANGUAGE]
-    url = entry.options[CONF_URL]
+    name = entry.data[CONF_NAME]
+    language = entry.data[CONF_LANGUAGE]
+    url = entry.data[CONF_URL]
 
     if name is None:
         raise ConfigEntryError("Name could not be resolved")

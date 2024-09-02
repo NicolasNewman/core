@@ -7,7 +7,7 @@ from typing import Any
 
 from ha_remote_tts import ApiError
 
-from homeassistant.components.tts import TextToSpeechEntity, TtsAudioType, Voice
+from homeassistant.components.tts import TextToSpeechEntity, TtsAudioType
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -42,7 +42,6 @@ class RemoteTTSTTSEntity(TextToSpeechEntity):
         self._client = config_entry.runtime_data.client
         self._name = config_entry.runtime_data.name
         self._url = config_entry.runtime_data.url
-        self._voices = [Voice(name=self._name, voice_id=self._name)]
         self._attr_unique_id = config_entry.entry_id
         self._attr_name = self._name
         self._attr_device_info = DeviceInfo(
@@ -53,10 +52,6 @@ class RemoteTTSTTSEntity(TextToSpeechEntity):
         )
         self._attr_supported_languages = [config_entry.runtime_data.language]
         self._attr_default_language = self.supported_languages[0]
-
-    def async_get_supported_voices(self, language: str) -> list[Voice]:
-        """Return a list of supported voices for a language."""
-        return self._voices
 
     async def async_get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]

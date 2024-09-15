@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 
-import praw
+from asyncpraw import Reddit
+from asyncpraw.exceptions import PRAWException
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -25,27 +25,23 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import RedditConfigEntry, RedditData
+from .const import (
+    ATTR_BODY,
+    ATTR_COMMENTS_NUMBER,
+    ATTR_CREATED,
+    ATTR_POSTS,
+    ATTR_SCORE,
+    ATTR_SUBREDDIT,
+    ATTR_TITLE,
+    ATTR_URL,
+    CONF_SORT_BY,
+    CONF_SUBREDDITS,
+    DOMAIN,
+    LIST_TYPES,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-CONF_SORT_BY = "sort_by"
-CONF_SUBREDDITS = "subreddits"
-
-ATTR_BODY = "body"
-ATTR_COMMENTS_NUMBER = "comms_num"
-ATTR_CREATED = "created"
-ATTR_POSTS = "posts"
-ATTR_SUBREDDIT = "subreddit"
-ATTR_SCORE = "score"
-ATTR_TITLE = "title"
-ATTR_URL = "url"
-
-DEFAULT_NAME = "Reddit"
-
-DOMAIN = "reddit"
-
-LIST_TYPES = ["top", "controversial", "hot", "new"]
-
-SCAN_INTERVAL = timedelta(seconds=300)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
@@ -62,10 +58,10 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Reddit sensor platform."""
@@ -75,30 +71,52 @@ def setup_platform(
     sort_by = config[CONF_SORT_BY]
 
     try:
-        reddit = praw.Reddit(
+        reddit = Reddit(
             client_id=config[CONF_CLIENT_ID],
             client_secret=config[CONF_CLIENT_SECRET],
             username=config[CONF_USERNAME],
             password=config[CONF_PASSWORD],
             user_agent=user_agent,
+            check_for_updates=False,
         )
+
+        await reddit.user.me()
 
         _LOGGER.debug("Connected to praw")
 
-    except praw.exceptions.PRAWException as err:
+    except PRAWException as err:
         _LOGGER.error("Reddit error %s", err)
         return
 
     sensors = [
         RedditSensor(reddit, subreddit, limit, sort_by) for subreddit in subreddits
     ]
-    add_entities(sensors, True)
+    async_add_entities(sensors, True)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: RedditConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Entry setup for Reddit sensor."""
+    reddit_data: RedditData = hass.data[DOMAIN][config_entry.entry_id]
+    sensors: list = [
+        RedditSensor(
+            reddit_data.client, subreddit, reddit_data.limit, reddit_data.sort_by
+        )
+        for subreddit in reddit_data.subreddits
+    ]
+    async_add_entities(sensors, True)
 
 
 class RedditSensor(SensorEntity):
     """Representation of a Reddit sensor."""
 
-    def __init__(self, reddit, subreddit: str, limit: int, sort_by: str) -> None:
+    def __init__(
+        self, reddit: Reddit, subreddit: str, limit: int, sort_by: str
+    ) -> None:
         """Initialize the Reddit sensor."""
         self._reddit = reddit
         self._subreddit = subreddit
@@ -131,16 +149,15 @@ class RedditSensor(SensorEntity):
         """Return the icon to use in the frontend."""
         return "mdi:reddit"
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Update data from Reddit API."""
         self._subreddit_data = []
 
         try:
-            subreddit = self._reddit.subreddit(self._subreddit)
+            subreddit = await self._reddit.subreddit(self._subreddit)
             if hasattr(subreddit, self._sort_by):
                 method_to_call = getattr(subreddit, self._sort_by)
-
-                for submission in method_to_call(limit=self._limit):
+                async for submission in method_to_call(limit=self._limit):
                     self._subreddit_data.append(
                         {
                             ATTR_ID: submission.id,
@@ -153,5 +170,5 @@ class RedditSensor(SensorEntity):
                         }
                     )
 
-        except praw.exceptions.PRAWException as err:
+        except PRAWException as err:
             _LOGGER.error("Reddit error %s", err)

@@ -479,6 +479,7 @@ FLOWS = {
         "rapt_ble",
         "rdw",
         "recollect_waste",
+        "reddit",
         "refoss",
         "renault",
         "renson",

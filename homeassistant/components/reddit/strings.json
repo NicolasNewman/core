@@ -1,0 +1,40 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "name": "name",
+          "client_id": "client_id",
+          "client_secret": "client_secret",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "name": "Sensor name",
+          "client_id": "Reddit API Client ID",
+          "client_secret": "Reddit API Client Secret",
+          "username": "Reddit Account Username",
+          "password": "Reddit Account Password"
+        }
+      },
+      "feed": {
+        "data": {
+          "subreddits": "subreddits",
+          "sort_by": "sort_by",
+          "maximum": "maximum"
+        },
+        "data_description": {
+          "subreddits": "Subreddits to track",
+          "sort_by": "Subreddit sorting method",
+          "maximum": "Maximum number of datapoints to fetch"
+        }
+      }
+    },
+    "error": {
+      "unauthorized_response": "Authentication error.",
+      "unknown_response": "Unknown response.",
+      "invalid_subreddit": "One or more of the entered subreddits does not exist.",
+      "no_subreddits": "No subreddits entered."
+    }
+  }
+}

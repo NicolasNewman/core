@@ -456,6 +456,9 @@ async-upnp-client==0.40.0
 # homeassistant.components.arve
 asyncarve==0.1.1
 
+# homeassistant.components.reddit
+asyncpraw==7.7.1
+
 # homeassistant.components.sleepiq
 asyncsleepiq==1.5.2
 
@@ -1311,9 +1314,6 @@ plumlightpad==0.0.11
 
 # homeassistant.components.poolsense
 poolsense==0.0.8
-
-# homeassistant.components.reddit
-praw==7.5.0
 
 # homeassistant.components.islamic_prayer_times
 prayer-times-calculator-offline==1.0.3
